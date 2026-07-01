@@ -212,11 +212,31 @@ first_message_length = 24 + payload_length
 
 second_message = response[first_message_length:]
 
-magic2, command2, payload_length2, checksum2, payload2 = parse_header(second_message)
+data = send_message(message)
+magic, command, payload_length, checksum, version_payload = parse_header(data)
 
-print(magic2.hex())
-print(command2)
-print(payload_length2)
-print(checksum2.hex())
-print(payload2.hex())
+if command == "version":
+    p = version_payload
 
+    version = int.from_bytes(p[0:4], "little")
+    services = int.from_bytes(p[4:12], "little")
+    timestamp = int.from_bytes(p[12:20], "little")
+
+    addr_recv = p[20:46]
+    addr_from = p[46:72]
+    nonce = p[72:80]
+
+    user_agent_length = p[80]
+    user_agent_start = 81
+    user_agent_end = user_agent_start + user_agent_length
+    user_agent = p[user_agent_start:user_agent_end].decode()
+
+    start_height = int.from_bytes(p[user_agent_end:user_agent_end + 4], "little")
+    relay = p[user_agent_end + 4]
+
+    print("version:", version)
+    print("services:", services)
+    print("timestamp:", timestamp)
+    print("user agent:", user_agent)
+    print("start height:", start_height)
+    print("relay:", relay)
