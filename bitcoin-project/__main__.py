@@ -1,8 +1,9 @@
 import socket
-import binascii
 from time import time
 import os
 from hashlib import sha256
+from protocolutils import inet_addr, checksum, parse_header
+from hexutils import hexprint
 
 HOST = "34.146.117.255"  #  seed.bitcoin.jonasschnelli.ch (dnsseed.bluematt.me 147.236.214.146 : didnt "recieved b"")
 PORT = 8333 # The port used by the server
@@ -45,17 +46,7 @@ PORT = 8333 # The port used by the server
 def hex(timestamp_to_be_converted):
    return
 
-def inet_addr(ip_address):
-    services = bytearray.fromhex("01 00 00 00 00 00 00 00")
 
-    host_prefix = bytearray.fromhex("00 00 00 00 00 00 00 00 00 00 FF FF")
-    
-    host_bytes = bytes(int(part) for part in ip_address.split("."))
-
-    port = 8333
-    port_bytes = port.to_bytes(2, 'big')
-
-    return services + host_prefix + host_bytes + port_bytes
 
 def send_message(message):
     HOST = "34.146.117.255"
@@ -79,7 +70,44 @@ def send_message(message):
     return data
 
     
+def version_command(host):
+    version = 70015
+    version_bytes = version.to_bytes(4, "little")
 
+    services = bytearray.fromhex("01 00 00 00 00 00 00 00")
+
+    timestamp = int(time())
+    timestamp_bytes = timestamp.to_bytes(8, "little")
+
+    rec_address = inet_addr(host)
+    sen_address = inet_addr("10.0.0.1")
+
+    node_id = generate_random()
+
+    sub_version_string = "/Satoshi:0.7.2/"
+    sub_version_string_length = len(sub_version_string)
+    sub_version_string_length_bytes = sub_version_string_length.to_bytes(1, "little")
+    sub_version_string_bytes = sub_version_string_length_bytes + sub_version_string.encode()
+
+    last_block = 0
+    last_block_bytes = last_block.to_bytes(4, "little")
+
+    relay = 0
+    relay_bytes = relay.to_bytes(1, "little")
+
+    payload = (
+        version_bytes
+        + services
+        + timestamp_bytes
+        + rec_address
+        + sen_address
+        + node_id
+        + sub_version_string_bytes
+        + last_block_bytes
+        + relay_bytes
+    )
+
+    return payload
 
 
 
@@ -87,30 +115,30 @@ def send_message(message):
 def generate_random():
     return os.urandom(8)
 
-def checksum(payload):
-   h1 = sha256()
-   h1.update(payload)
-   firsthex = h1.digest()
 
-   h2=sha256()
-   h2.update(firsthex)
-   finished_hash = h2.digest()
-   checksum = finished_hash[:4]
-   return checksum 
+def bitcoin_message(command, payload):
+    magic_number = bytearray.fromhex("F9 BE B4 D9")
 
+    command_bytes = command.encode()
+    command_bytes = command_bytes + b"\x00" * (12 - len(command_bytes))
+
+    payload_length = len(payload).to_bytes(4, "little")
+    checksum_bytes = checksum(payload)
+
+    message = (
+        magic_number
+        + command_bytes
+        + payload_length
+        + checksum_bytes
+        + payload
+    )
+
+    return message
   
-def parse_header(data):
-    magic = data[:4]
-    command = data[4:16].rstrip(b"\x00").decode()
-    payload_length = int.from_bytes(data[16:20], "little")
-    checksum = data[20:24]
-    payload = data[24:24 + payload_length]
-
-    return magic, command, payload_length, checksum, payload
 
 
-def hexprint(byte_array):
-    print(binascii.hexlify(byte_array, b" "))
+
+
     
 
 # version = 7F 11 01 00 
@@ -123,74 +151,11 @@ def hexprint(byte_array):
 # last block = 00
 # relay = 00 
 
+payload = version_command(HOST)
 
-version = 70015
-version_bytes = version.to_bytes(4, 'little')
-hexprint(version_bytes) 
-
-services= bytearray.fromhex("01 00 00 00 00 00 00 00")
-hexprint(services)
-
-timestamp = int(time())
-timestamp_bytes=timestamp.to_bytes(8, "little")
-hexprint(timestamp_bytes)
-
-rec_address = inet_addr(HOST)
-hexprint(rec_address)
-
-sen_address = inet_addr("10.0.0.1")
-hexprint(sen_address)
-
-node_id = generate_random()
-hexprint(node_id)
-
-sub_version_string = "/Satoshi:0.7.2/"  
-sub_version_string_length = len(sub_version_string)
-sub_version_string_length_bytes = sub_version_string_length.to_bytes(1, 'little')
-sub_version_string_bytes = sub_version_string_length_bytes + sub_version_string.encode()
-hexprint(sub_version_string_bytes)
-
-last_block = 0 
-last_block_bytes = last_block.to_bytes(4, 'little')
-hexprint(last_block_bytes)
-
-relay = 0
-relay_bytes = relay.to_bytes(1, 'little')
-hexprint(relay_bytes)
+message = bitcoin_message("version", payload)
 
 
-payload = (
-    version_bytes
-    + services
-    + timestamp_bytes
-    + rec_address
-    + sen_address
-    + node_id
-    + sub_version_string_bytes
-    + last_block_bytes
-    + relay_bytes
-)
-
-hexprint(payload)
-checksum_bytes=checksum(payload)
-hexprint(checksum_bytes)
-
-magic_number = bytearray.fromhex("F9 BE B4 D9")
-hexprint(magic_number)
-
-version_command = bytearray.fromhex("76 65 72 73 69 6f 6e 00 00 00 00 00")
-hexprint(version_command)
-
-payload_length = len(payload).to_bytes(4, "little")
-hexprint(payload_length)
-
-message = (
-    magic_number
-    + version_command
-    + payload_length
-    + checksum_bytes
-    + payload
-)
 print ("sending message")
 hexprint(message)
 
