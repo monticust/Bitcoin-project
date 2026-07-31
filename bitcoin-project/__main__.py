@@ -1,4 +1,4 @@
-import socket
+from socketutils import send_message
 
 from hexutils import hexprint
 from protocolutils import (
@@ -12,14 +12,6 @@ HOST = "34.146.117.255"
 PORT = 8333
 
 
-def send_message(host, port, message):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.connect((host, port))
-        sock.sendall(message)
-
-        response = sock.recv(4096)
-
-    return response
 
 
 payload = version_command(HOST)
@@ -47,31 +39,9 @@ print("checksum:", checksum_bytes.hex())
 if command == "version":
     payload = version_payload
 
-    version = int.from_bytes(payload[0:4], "little")
-    services = int.from_bytes(payload[4:12], "little")
-    timestamp = int.from_bytes(payload[12:20], "little")
+   
 
-    addr_recv = payload[20:46]
-    addr_from = payload[46:72]
-    nonce = payload[72:80]
-
-    user_agent_length = payload[80]
-
-    user_agent_start = 81
-    user_agent_end = user_agent_start + user_agent_length
-
-    user_agent = payload[
-        user_agent_start:user_agent_end
-    ].decode()
-
-    start_height = int.from_bytes(
-        payload[user_agent_end:user_agent_end + 4],
-        "little",
-    )
-
-    relay_position = user_agent_end + 4
-
-    if relay_position < len(payload):
+if relay_position < len(payload):
         relay = payload[relay_position]
     else:
         relay = None
