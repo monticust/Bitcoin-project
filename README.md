@@ -1,0 +1,1 @@
+# change to the parent directory cd /path/to/Bitcoin-project and run as a package python3 -m bitcoin-projectgi
