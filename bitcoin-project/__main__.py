@@ -39,12 +39,29 @@ print("checksum:", checksum_bytes.hex())
 if command == "version":
     payload = version_payload
 
-   
+    version = int.from_bytes(payload[0:4], "little")
+    services = int.from_bytes(payload[4:12], "little")
+    timestamp = int.from_bytes(payload[12:20], "little")
 
-if relay_position < len(payload):
-        relay = payload[relay_position]
+    addr_recv = payload[20:46]
+    addr_from = payload[46:72]
+    nonce = payload[72:80]
+    user_agent_length = payload[80]
+    user_agent_start = 81
+    user_agent_end = user_agent_start + user_agent_length
+
+    user_agent = payload[user_agent_start:user_agent_end].decode()
+    start_height_position = user_agent_end
+    start_height = int.from_bytes(
+       payload[start_height_position:start_height_position + 4],
+       "little"
+    )
+    relay_position = start_height_position + 4
+
+    if relay_position < len(payload):
+       relay = bool(payload[relay_position])
     else:
-        relay = None
+       relay = None
 
     print("version:", version)
     print("services:", services)
