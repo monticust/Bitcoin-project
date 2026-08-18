@@ -135,3 +135,45 @@ def bitcoin_message(command, payload):
     )
 
     return message
+
+
+
+def parse_version_command(payload):
+    version = int.from_bytes(payload[0:4], "little")
+    services = int.from_bytes(payload[4:12], "little")
+    timestamp = int.from_bytes(payload[12:20], "little")
+
+    addr_recv = payload[20:46]
+    addr_from = payload[46:72]
+    nonce = payload[72:80]
+
+    user_agent_length = payload[80]
+
+    user_agent_start = 81
+    user_agent_end = user_agent_start + user_agent_length
+
+    user_agent = payload[user_agent_start:user_agent_end].decode()
+
+    start_height = int.from_bytes(
+        payload[user_agent_end:user_agent_end + 4],
+        "little",
+    )
+
+    relay_position = user_agent_end + 4
+
+    if relay_position < len(payload):
+        relay = payload[relay_position]
+    else:
+        relay = None
+
+    return (
+        version,
+        services,
+        timestamp,
+        addr_recv,
+        addr_from,
+        nonce,
+        user_agent,
+        start_height,
+        relay,
+    )

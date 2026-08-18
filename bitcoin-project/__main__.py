@@ -1,4 +1,4 @@
-import socket
+from socketutils import send_message
 
 from hexutils import hexprint
 from protocolutils import (
@@ -12,14 +12,6 @@ HOST = "34.146.117.255"
 PORT = 8333
 
 
-def send_message(host, port, message):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.connect((host, port))
-        sock.sendall(message)
-
-        response = sock.recv(4096)
-
-    return response
 
 
 payload = version_command(HOST)
@@ -54,27 +46,22 @@ if command == "version":
     addr_recv = payload[20:46]
     addr_from = payload[46:72]
     nonce = payload[72:80]
-
     user_agent_length = payload[80]
-
     user_agent_start = 81
     user_agent_end = user_agent_start + user_agent_length
 
-    user_agent = payload[
-        user_agent_start:user_agent_end
-    ].decode()
-
+    user_agent = payload[user_agent_start:user_agent_end].decode()
+    start_height_position = user_agent_end
     start_height = int.from_bytes(
-        payload[user_agent_end:user_agent_end + 4],
-        "little",
+       payload[start_height_position:start_height_position + 4],
+       "little"
     )
-
-    relay_position = user_agent_end + 4
+    relay_position = start_height_position + 4
 
     if relay_position < len(payload):
-        relay = payload[relay_position]
+       relay = bool(payload[relay_position])
     else:
-        relay = None
+       relay = None
 
     print("version:", version)
     print("services:", services)
