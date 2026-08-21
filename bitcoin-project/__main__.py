@@ -32,9 +32,17 @@ hexprint(response)
 
 messages = parse_messages(response)
 
-magic, command, payload_length, checksum_bytes, version_payload = (
-    parse_header(messages[0])
-)# here ill be using messages[0]
+for message in messages:
+    magic, command, payload_length, checksum_bytes, payload = (
+        parse_header(message)
+    )
+
+    if command == "version":
+        parse_version_command(payload)
+
+    elif command == "verack":
+        print("Handshake acknowledged")
+# here ill be using messages[0]
 
 
 
