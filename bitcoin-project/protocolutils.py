@@ -162,7 +162,7 @@ def parse_version_command(payload):
     relay_position = user_agent_end + 4
 
     if relay_position < len(payload):
-        relay = payload[relay_position]
+        relay = bool(payload[relay_position])
     else:
         relay = None
 
@@ -177,3 +177,31 @@ def parse_version_command(payload):
         start_height,
         relay,
     )
+
+
+def parse_messages(response):
+    messages = []
+    position = 0
+
+    while position < len(response):
+
+          # Read the payload length from the current message's header
+          payload_length_bytes = response[position + 16 : position + 20]
+
+          payload_length = int.from_bytes(
+             payload_length_bytes,
+              "little"
+          )
+
+          # Calculate total message length
+          message_length = 24 + payload_length
+
+          # Extract the complete message
+          message = response[position : position + message_length]
+
+          messages.append(message)
+
+          # Move to the next message
+          position += message_length
+
+    return messages
