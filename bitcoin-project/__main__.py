@@ -5,6 +5,8 @@ from protocolutils import (
     bitcoin_message,
     parse_header,
     version_command,
+    parse_version_command,
+    parse_messages
 )
 
 
@@ -26,49 +28,41 @@ print("response from node")
 hexprint(response)
 
 
-magic, command, payload_length, checksum_bytes, version_payload = (
-    parse_header(response)
-)
 
-print("magic:", magic.hex())
-print("command:", command)
-print("payload length:", payload_length)
-print("checksum:", checksum_bytes.hex())
+messages = parse_messages(response)
 
-
-if command == "version":
-    payload = version_payload
-
-    version = int.from_bytes(payload[0:4], "little")
-    services = int.from_bytes(payload[4:12], "little")
-    timestamp = int.from_bytes(payload[12:20], "little")
-
-    addr_recv = payload[20:46]
-    addr_from = payload[46:72]
-    nonce = payload[72:80]
-    user_agent_length = payload[80]
-    user_agent_start = 81
-    user_agent_end = user_agent_start + user_agent_length
-
-    user_agent = payload[user_agent_start:user_agent_end].decode()
-    start_height_position = user_agent_end
-    start_height = int.from_bytes(
-       payload[start_height_position:start_height_position + 4],
-       "little"
+for message in messages:
+    magic, command, payload_length, checksum_bytes, payload = (
+        parse_header(message)
     )
-    relay_position = start_height_position + 4
+   
+   
+    
+    if command == "version":
 
-    if relay_position < len(payload):
-       relay = bool(payload[relay_position])
-    else:
-       relay = None
+      version, services, timestamp, addr_recv, addr_from, nonce, user_agent, start_height, relay = (
+         parse_version_command(payload)
+      )
 
-    print("version:", version)
-    print("services:", services)
-    print("timestamp:", timestamp)
-    print("receiver address:", addr_recv.hex())
-    print("sender address:", addr_from.hex())
-    print("nonce:", nonce.hex())
-    print("user agent:", user_agent)
-    print("start height:", start_height)
-    print("relay:", relay)
+      print("version:", version)
+      print("services:", services)
+      print("timestamp:", timestamp)
+      print("receiver address:", addr_recv.hex())
+      print("sender address:", addr_from.hex())
+      print("nonce:", nonce.hex())
+      print("user agent:", user_agent)
+      print("start height:", start_height)
+      print("relay:", relay)
+
+    elif command == "verack":
+        print("Handshake acknowledged")
+
+
+
+
+
+
+
+
+
+
