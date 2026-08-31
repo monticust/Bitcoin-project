@@ -1,0 +1,18 @@
+class Message:
+    pass
+
+
+class NetAddr:
+    def __init__(self, services, ip, port):
+        self.services = services
+        self.ip = ip
+        self.port = port
+   
+
+
+class VersionCommand:
+    pass
+
+
+class VerackCommand:
+    pass 
