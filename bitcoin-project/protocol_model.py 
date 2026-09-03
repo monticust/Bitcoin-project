@@ -1,11 +1,11 @@
 class Message:
     def __init__(
         self,
-        magic,
-        command,
-        payload_length,
-        checksum,
-        payload,
+        magic: bytes,
+        command: str,
+        payload_length: int,
+        checksum: bytes,
+        payload: bytes,
     ):
         self.magic = magic
         self.command = command
@@ -13,26 +13,30 @@ class Message:
         self.checksum = checksum
         self.payload = payload
 
-
 class NetAddr:
-    def __init__(self, services, ip, port):
+    def __init__(self, services: int, ip: str, port: int):
         self.services = services
         self.ip = ip
         self.port = port
 
+class BaseCommand:
+    pass
 
-class VersionCommand:
+
+
+
+class VersionCommand(BaseCommand):
     def __init__(
         self,
-        version,
-        services,
-        timestamp,
-        addr_recv,
-        addr_from,
+        version: int,
+        services: int,
+        timestamp: int,
+        addr_recv: NetAddr,
+        addr_from: NetAddr,
         nonce,
         user_agent,
-        start_height,
-        relay,
+        start_height: int,
+        relay: bool,
     ):
         self.version = version
         self.services = services
@@ -44,6 +48,5 @@ class VersionCommand:
         self.start_height = start_height
         self.relay = relay
 
-
-class VerackCommand:
+class VerackCommand(BaseCommand):
     pass
