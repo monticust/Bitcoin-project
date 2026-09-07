@@ -1,3 +1,5 @@
+from protocolutils import parse_header
+
 class Message:
     def __init__(
         self,
@@ -12,6 +14,18 @@ class Message:
         self.payload_length = payload_length
         self.checksum = checksum
         self.payload = payload
+
+        @classmethod
+     def from_bytes(cls, data: bytes) -> "Message":
+        magic, command, payload_length, checksum, payload = parse_header(data)
+
+        return cls(
+          magic,
+          command,
+          payload_length,
+          checksum,
+          payload,
+      )
 
 class NetAddr:
     def __init__(self, services: int, ip: str, port: int):
