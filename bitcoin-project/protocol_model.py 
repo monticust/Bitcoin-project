@@ -26,6 +26,7 @@ class Message:
           checksum,
           payload,
       )
+    
     def to_command(self) -> "BaseCommand":
         if self.command == "version":
             (
@@ -55,7 +56,7 @@ class Message:
         elif self.command == "verack":
             return VerackCommand()
 
-            
+
 class NetAddr:
     def __init__(self, services: int, ip: str, port: int):
         self.services = services
@@ -63,7 +64,8 @@ class NetAddr:
         self.port = port
 
 class BaseCommand:
-    pass
+    def print(self):
+        pass
 
 
 
@@ -74,9 +76,9 @@ class VersionCommand(BaseCommand):
         version: int,
         services: int,
         timestamp: int,
-        addr_recv: NetAddr,
-        addr_from: NetAddr,
-        nonce,
+        addr_recv: bytes,
+        addr_from: bytes,
+        nonce:bytes,
         user_agent,
         start_height: int,
         relay: bool,
@@ -91,5 +93,18 @@ class VersionCommand(BaseCommand):
         self.start_height = start_height
         self.relay = relay
 
+    def print(self):
+        print("version:", self.version)
+        print("services:", self.services)
+        print("timestamp:", self.timestamp)
+        print("receiver address:", self.addr_recv.hex())
+        print("sender address:", self.addr_from.hex())
+        print("nonce:", self.nonce.hex())
+        print("user agent:", self.user_agent)
+        print("start height:", self.start_height)
+        print("relay:", self.relay)
+
 class VerackCommand(BaseCommand):
-    pass
+    def print(self):
+        print("Handshake acknowledged")
+        
