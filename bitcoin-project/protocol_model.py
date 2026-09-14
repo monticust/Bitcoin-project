@@ -1,4 +1,4 @@
-from .protocolutils import parse_header, parse_version_command
+from protocolutils import parse_header, parse_version_command
 
 class Message:
     def __init__(

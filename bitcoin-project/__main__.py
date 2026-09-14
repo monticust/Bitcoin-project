@@ -1,12 +1,11 @@
 from socketutils import send_message
-
+from protocol_model import Message
 from hexutils import hexprint
+
 from protocolutils import (
     bitcoin_message,
-    parse_header,
     version_command,
-    parse_version_command,
-    parse_messages
+    parse_messages,
 )
 
 
@@ -32,32 +31,9 @@ hexprint(response)
 messages = parse_messages(response)
 
 for message in messages:
-    magic, command, payload_length, checksum_bytes, payload = (
-        parse_header(message)
-    )
-   
-   
-    
-    if command == "version":
-
-      version, services, timestamp, addr_recv, addr_from, nonce, user_agent, start_height, relay = (
-         parse_version_command(payload)
-      )
-
-      print("version:", version)
-      print("services:", services)
-      print("timestamp:", timestamp)
-      print("receiver address:", addr_recv.hex())
-      print("sender address:", addr_from.hex())
-      print("nonce:", nonce.hex())
-      print("user agent:", user_agent)
-      print("start height:", start_height)
-      print("relay:", relay)
-
-    elif command == "verack":
-        print("Handshake acknowledged")
-
-
+    message_object = Message.from_bytes(message)
+    command_object = message_object.to_command()
+    command_object.print()
 
 
 
