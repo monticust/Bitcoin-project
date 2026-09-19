@@ -1,4 +1,4 @@
-from socketutils import send_message
+from socketutils import send_message_and_return_response
 from protocol_model import Message
 from hexutils import hexprint
 
@@ -21,7 +21,7 @@ message = bitcoin_message("version", payload)
 print("sending message")
 hexprint(message)
 
-response = send_message(HOST, PORT, message)
+response = send_message_and_return_response(HOST, PORT, message)
 
 print("response from node")
 hexprint(response)
@@ -33,7 +33,7 @@ messages = parse_messages(response)
 for message in messages:
     message_object = Message.from_bytes(message)
     command_object = message_object.to_command()
-    command_object.print()
+    command_object.print() 
 
 
 

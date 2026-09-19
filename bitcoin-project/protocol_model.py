@@ -1,4 +1,4 @@
-from protocolutils import parse_header, parse_version_command
+from protocolutils import parse_header, parse_version_command, version_command
 
 class Message:
     def __init__(
@@ -92,7 +92,34 @@ class VersionCommand(BaseCommand):
         self.user_agent = user_agent
         self.start_height = start_height
         self.relay = relay
+    
+    @classmethod
+    def from_host(cls, host: str) -> "VersionCommand":
+        payload = version_command(host)
 
+        (
+        version,
+        services,
+        timestamp,
+        addr_recv,
+        addr_from,
+        nonce,
+        user_agent,
+        start_height,
+        relay,
+        ) = parse_version_command(payload)
+
+        return cls(
+        version,
+        services,
+        timestamp,
+        addr_recv,
+        addr_from,
+        nonce,
+        user_agent,
+        start_height,
+        relay,
+      )
     def print(self):
         print("version:", self.version)
         print("services:", self.services)
