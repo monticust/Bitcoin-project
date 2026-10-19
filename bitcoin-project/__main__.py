@@ -1,5 +1,5 @@
 from socketutils import send_message_and_return_response
-from protocol_model import Message
+from protocol_model import Message, BaseCommand, VersionCommand
 from hexutils import hexprint
 
 from protocolutils import (
@@ -15,8 +15,11 @@ PORT = 8333
 
 
 
-payload = version_command(HOST)
-message = bitcoin_message("version", payload)
+command: BaseCommand = VersionCommand.from_host(HOST)
+
+message: Message = Message.from_command(command)
+
+message_bytes = message.to_bytes()
 
 print("sending message")
 hexprint(message)
