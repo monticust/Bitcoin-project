@@ -22,9 +22,9 @@ message: Message = Message.from_command(command)
 message_bytes = message.to_bytes()
 
 print("sending message")
-hexprint(message)
+hexprint(message_bytes)
 
-response = send_message_and_return_response(HOST, PORT, message)
+response = send_message_and_return_response(HOST, PORT, message_bytes)
 
 print("response from node")
 hexprint(response)

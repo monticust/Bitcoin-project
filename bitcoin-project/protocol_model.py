@@ -1,4 +1,4 @@
-from protocolutils import parse_header, parse_version_command, version_command
+from protocolutils import parse_header, parse_version_command, version_command,checksum
 from time import time
 from socket import inet_aton
 from protocolutils import inet_addr
@@ -20,7 +20,22 @@ class Message:
         self.payload = payload
     
     def to_bytes(self) -> bytes:
-        pass
+        command_bytes = self.command.encode()
+
+        if len(command_bytes) > 12:
+            raise ValueError("Bitcoin commands cannot exceed 12 bytes")
+
+        command_bytes += b"\x00" * (12 - len(command_bytes))
+
+        payload_length_bytes = self.payload_length.to_bytes(4, "little")
+
+        return (
+           self.magic
+           + command_bytes
+           + payload_length_bytes
+           + self.checksum
+           + self.payload
+        )
 
     @classmethod
     def from_command(cls, command: "BaseCommand") -> "Message":
@@ -31,7 +46,22 @@ class Message:
         elif isinstance(command, VerackCommand):
            command_name = "verack"
         
-        pass
+        else:
+            raise ValueError("Unsupported command type")
+        
+        payload = command.to_bytes()
+        payload_length = len(payload)
+        checksum_bytes = checksum(payload)
+
+        return cls(
+            magic,
+            command_name,
+            payload_length,
+            checksum_bytes,
+            payload,
+        )
+
+
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "Message":
@@ -143,6 +173,32 @@ class VersionCommand(BaseCommand):
         start_height,
         relay,
       )
+
+    def to_bytes(self) -> bytes:
+       version_bytes = self.version.to_bytes(4, "little")
+       services_bytes = self.services.to_bytes(8,"little")
+       timestamp_bytes = self.timestamp.to_bytes(8, "little")
+       last_block_bytes = self.start_height.to_bytes(4,"little")
+       relay_bytes = int(self.relay).to_bytes(1,"little")
+       user_agent_bytes = self.user_agent.encode()
+       user_agent_length = len(user_agent_bytes)
+       user_agent_length_bytes = user_agent_length.to_bytes(1,"little")
+       
+       payload = (
+       version_bytes
+       + services_bytes
+       + timestamp_bytes
+       + self.addr_recv
+       + self.addr_from
+       + self.nonce
+       + user_agent_length_bytes
+       + user_agent_bytes
+       + last_block_bytes
+       + relay_bytes
+       )
+
+       return payload
+
     def print(self):
         print("version:", self.version)
         print("services:", self.services)
