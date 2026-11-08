@@ -1,9 +1,16 @@
-from protocolutils import parse_header, parse_version_command, version_command,checksum
+from protocolutils import (
+    parse_header,
+    parse_version_command,
+    version_command,
+    checksum,
+    inet_addr,
+    generate_random,
+    parse_messages,
+)
+
+from socketutils import send_message_and_return_response
 from time import time
-from socket import inet_aton
-from protocolutils import inet_addr
-from protocolutils import generate_random
-import socket
+
 
 class Message:
     def __init__(
@@ -41,41 +48,26 @@ class Message:
 
     def send(self, host :str, port :int) -> list["Message"]:
         message_bytes = self.to_bytes()
+        
+
+        response = send_message_and_return_response(
+            host, port, message_bytes
+        )
+        
+        messages = parse_messages(response)
+
 
         recieved_messages = []
-        buffer = b""
         
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect((host,port))
-            sock.sendall((message_bytes))
-            
-            while True :
-                response = sock.recv(4096)
-            
-                if not response :
-                    break
+        for message_data in messages:
+            recieved_message = Message.from_bytes(message_data)
+            recieved_messages.append(recieved_message)
 
-
-                buffer += response
-                
-                while len(buffer) >= 24:
-
-                    if len(buffer) < 24:
-                        break
-              
-                    payload_length = int.from_bytes(buffer[16:20],"little")
-                    total_length = 24 + payload_length
-
-                    if len(buffer) < total_length:
-                        continue
-
-                    message_data = buffer[:total_length]
-                    buffer = buffer[total_length:]
-                
-                    recieved_message = Message.from_bytes(message_data)
-                    recieved_messages.append(recieved_message)
-        
         return recieved_messages
+        
+            
+           
+                
 
 
     
