@@ -1,8 +1,16 @@
-from protocolutils import parse_header, parse_version_command, version_command,checksum
+from protocolutils import (
+    parse_header,
+    parse_version_command,
+    version_command,
+    checksum,
+    inet_addr,
+    generate_random,
+    parse_messages,
+)
+
+from socketutils import send_message_and_return_response
 from time import time
-from socket import inet_aton
-from protocolutils import inet_addr
-from protocolutils import generate_random
+
 
 class Message:
     def __init__(
@@ -36,6 +44,33 @@ class Message:
            + self.checksum
            + self.payload
         )
+    
+
+    def send(self, host :str, port :int) -> list["Message"]:
+        message_bytes = self.to_bytes()
+        
+
+        response = send_message_and_return_response(
+            host, port, message_bytes
+        )
+        
+        messages = parse_messages(response)
+
+
+        recieved_messages = []
+        
+        for message_data in messages:
+            recieved_message = Message.from_bytes(message_data)
+            recieved_messages.append(recieved_message)
+
+        return recieved_messages
+        
+            
+           
+                
+
+
+    
 
     @classmethod
     def from_command(cls, command: "BaseCommand") -> "Message":
